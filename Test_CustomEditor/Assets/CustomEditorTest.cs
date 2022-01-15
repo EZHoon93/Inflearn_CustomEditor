@@ -14,7 +14,7 @@ public class CustomEditorTest : Editor
   
     private void OnEnable()
     {
-
+        SceneView.duringSceneGui += OnSceneGUI;
         targetObjectProp = serializedObject.FindProperty($"{nameof(CustomScript.otherObject)}");
         nameProp = serializedObject.FindProperty($"{nameof(CustomScript.myName)}");
         hpProp = serializedObject.FindProperty($"{nameof(CustomScript.myHP)}");
@@ -22,6 +22,52 @@ public class CustomEditorTest : Editor
         //hpProp = serializedObject.FindProperty("myHP");
 
         targetRef = (CustomScript)base.target;
+
+    }
+
+    private void OnDisable()
+    {
+        SceneView.duringSceneGui -= OnSceneGUI;
+
+    }
+
+    private void OnSceneGUI(SceneView obj)
+    {
+        //라벨을띄움
+        Handles.Label(targetRef.transform.position, $"IAm {targetRef.gameObject.name}");
+
+        var otherObjs = FindObjectsOfType<CustomScript>();
+
+        for(int i = 0;  i < otherObjs.Length; i++)
+        {
+            if(this.targetRef != otherObjs[i])
+            {
+                var pos = otherObjs[i].transform.position;
+                //선택된게임 오브젝트에서 다른게임오브젝트까지 라인그려줌
+                Handles.DrawLine(this.targetRef.transform.position, pos);
+
+                Handles.color = Color.red;
+                Handles.DrawWireCube(pos, Vector3.one);
+                Handles.color = Color.white;
+            }
+        }
+
+        Handles.DrawWireCube(targetRef.transform.position, new Vector3(2, 3, 2)); //내가선택한 큐브를 그려줌
+
+        Handles.BeginGUI();
+        {
+            if(GUILayout.Button("Move RRRR"))
+            {
+                targetRef.transform.position += Vector3.right;
+            }
+            if (GUILayout.Button("Move  LLL" +this.targetRef.name))
+            {
+                targetRef.transform.position -= Vector3.right;
+
+            }
+        }
+
+        Handles.EndGUI();
 
     }
 

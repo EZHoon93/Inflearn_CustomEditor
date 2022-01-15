@@ -31,6 +31,60 @@ public class MyEditorWindow : EditorWindow
 
     private void OnGUI()
     {
+
+        #region
+        if (GUILayout.Button("모든 머테리얼찾기 "))
+        {
+            var resultGuid = AssetDatabase.FindAssets("t:material"); //t : Type,즉  머테리얼타입
+            if(resultGuid != null)
+            {
+                for (int i = 0; i < resultGuid.Length;  i++)
+                {
+                    Debug.Log("==================");
+
+                    var guid = resultGuid[i];
+                    var path = AssetDatabase.GUIDToAssetPath(guid);
+
+                    Debug.Log($"GUID : {guid} ,Path :{path} , Guid From Path : {AssetDatabase.GUIDToAssetPath(path)}");
+                }
+            }
+        }
+        #endregion
+
+        #region
+        if (GUILayout.Button("모든 머테리얼 로드및적용 "))
+        {
+            var resultGuid = AssetDatabase.FindAssets("t:material"); //t : Type,즉  머테리얼타입
+            if (resultGuid != null)
+            {
+                for (int i = 0; i < resultGuid.Length; i++)
+                {
+                    var guid = resultGuid[i];
+                    var path = AssetDatabase.GUIDToAssetPath(guid);
+
+                    //큐브를 생성하고 머테리얼 적용.
+                    var loadedMat = AssetDatabase.LoadAssetAtPath<Material>(path);
+                    if(loadedMat != null)
+                    {
+                        Debug.Log($"Mateiral Loaded  : { path}  ");
+                        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        cube.GetComponent<Renderer>().material = loadedMat;
+
+                    }
+                }
+            }
+        }
+        #endregion
+
+
+        #region Asset 생성
+        //머테리얼 생성 , 
+        if (GUILayout.Button("Asset 생성하기 "))
+        {
+            var loadedMat = new Material(Shader.Find("Standard"));
+            AssetDatabase.CreateAsset(loadedMat, $"Assets/MyMaterial{(int)Random.Range(0,999)}.mat");
+        }
+        #endregion
         //버튼클릭시 다시 값을리셋후 가져옴
         if (GUILayout.Button("Refe"))
         {
@@ -55,6 +109,8 @@ public class MyEditorWindow : EditorWindow
 
         }
 
+        
+        ///
 
         foreach(var pair in Targets)
         {

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66ede137c42b9504c99d98c8d7a4a3c5, type: 3}
+  m_Name: New Custom Grid Palette
+  m_EditorClassIdentifier: 
+  items:
+  - id: 0
+    name: a
+    targetObject: {fileID: 4336860772010764915, guid: f89dfc8a14217034fa86952d5e7e54f5,
+      type: 3}
+  - id: 1
+    name: b
+    targetObject: {fileID: 389483933608122224, guid: 14b100945dac8994aafc004d2d1f0468,
+      type: 3}
+  - id: 2
+    name: c
+    targetObject: {fileID: 534706811890635355, guid: 99137090b189feb4daf2f5a9796923a4,
+      type: 3}
