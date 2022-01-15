@@ -92,10 +92,11 @@ public static class EditorHelper
                         for(int j = 0; j < horCnt; j++)
                         {
                             int idx = j + (i * horCnt);
-                            if(idx > itemCnt)
+                            if(idx >= itemCnt)
                             {
                                 break;
                             }
+                            Debug.Log(idx + "idx!!");
                             onDrawer(idx);
 
                             GUILayout.Space(gapSpace);
