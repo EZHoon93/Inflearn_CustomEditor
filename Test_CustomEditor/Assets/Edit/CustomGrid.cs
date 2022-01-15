@@ -5,7 +5,7 @@ using UnityEngine;
 public class CustomGrid : MonoBehaviour
 {
     public CustomGridConfig config;
-
+    public Dictionary<Vector2Int, MapObject> items = new Dictionary<Vector2Int, MapObject>();
     public Vector3[] horLines;
     public Vector3[] verLines;
 
@@ -45,6 +45,57 @@ public class CustomGrid : MonoBehaviour
         }
 
 
+    }
+
+    public bool Contains(Vector2Int cellPos)
+    {
+        return cellPos.x >= 0 && cellPos.x < config.CellCount.x && cellPos.y >= 0 && cellPos.y < config.CellCount.y;
+    }
+
+    public bool IsItemExist(Vector2Int cellPos)
+    {
+        return items.ContainsKey(cellPos);
+    }
+
+    public MapObject GetItem(Vector2Int cellPos)
+    {
+        if(items.ContainsKey(cellPos) == false)
+        {
+            return null;
+        }
+
+        return items[cellPos];
+    }
+
+    public void RemoveItem(Vector2Int cellPos)
+    {
+        if (items.ContainsKey(cellPos))
+        {
+            items.Remove(cellPos);
+        }
+    }
+
+    public MapObject  AddItem(Vector2Int cellPos, CustomGridPaletteItem paletteItem)
+    {
+        if (items.ContainsKey(cellPos))
+        {
+            Debug.LogError("Error");
+            return null;
+        }
+
+        var target = GameObject.Instantiate(paletteItem.targetObject, transform);
+        target.transform.position = GetWorldPos(cellPos);
+        var comp = target.AddComponent<MapObject>();
+        comp.id = paletteItem.id;
+        comp.cellPos = cellPos;
+
+        items.Add(cellPos, comp);
+        return comp;
+    }
+
+    public Vector3 GetWorldPos(Vector2Int cellPos)
+    {
+        return new Vector3(cellPos.x * config.CellSize.x + config.CellSize.x * 0.5f, cellPos.y * config.CellSize.y + config.CellSize.y * 0.5f, 0);
     }
 
 }

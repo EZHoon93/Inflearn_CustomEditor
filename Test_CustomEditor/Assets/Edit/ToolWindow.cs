@@ -55,16 +55,68 @@ public class ToolWindow : EditorWindow
 
     private void OnDisable()
     {
+        Clear();
         SceneView.duringSceneGui -= OnSceneGUI;
     }
 
     void OnSceneGUI(SceneView obj)
     {
-        var mousePos = Event.current.mousePosition;
-        var ray = HandleUtility.GUIPointToWorldRay(mousePos);
 
-        EditorHelper.RayCast(ray.origin, ray.origin + ray.direction * 300, out var hitPos);
+        if(currentMode  != EditMode.Edit)
+        {
+            return;
+        }
+        if(Event.current.button == 0 && Event.current.type == EventType.MouseDown)
+        {
+            var mousePos = Event.current.mousePosition;
+            var ray = HandleUtility.GUIPointToWorldRay(mousePos);
+            EditorHelper.RayCast(ray.origin, ray.origin + ray.direction * 300, out var hitPos);
+
+
+            var cellPos = targetGrid.GetCellPos(hitPos);
+            //마우스가 그리드내에잇을때
+            if (targetGrid.Contains(cellPos))
+            {
+                if(selectedEditToolMode == EditToolMode.Paint)
+                {
+                    Paint(cellPos);
+                }
+                else if(selectedEditToolMode == EditToolMode.Erase)
+                {
+                    Erase(cellPos);
+                }
+            }
+        }
         //Debug.Log(FindObjectOfType<CustomGrid>().GetCellPos(hitPos  ));
+    }
+
+    void Paint(Vector2Int cellPos)
+    {
+        var selectedItem = plaetteDrawer.SelectedItem;
+        if(selectedItem == null)
+        {
+            return;
+        }
+        if (targetGrid.IsItemExist(cellPos))
+        {
+            GameObject.DestroyImmediate(targetGrid.GetItem(cellPos).gameObject);
+            targetGrid.RemoveItem(cellPos);
+        }
+
+        var target = targetGrid.AddItem(cellPos, selectedItem);
+
+        Event.current.Use();        //이벤트있는것 소거..
+    }
+
+    void Erase(Vector2Int cellPos)
+    {
+        if (targetGrid.IsItemExist(cellPos))
+        {
+            GameObject.DestroyImmediate(targetGrid.GetItem(cellPos).gameObject);
+            targetGrid.RemoveItem(cellPos);
+            Event.current.Use();
+
+        }
     }
     private void OnGUI()
     {
@@ -94,7 +146,7 @@ public class ToolWindow : EditorWindow
         GUI.enabled = isCreateble;
         if (EditorHelper.DrawCenterButton("생성하기" , new Vector2(100,50)))
         {
-            targetGrid = BuildGrid(cellCount, cellSize);
+            targetGrid = BuildGrid(this.cellCount, this.cellSize);
             ChangeMode(EditMode.Edit);
         }
         GUI.enabled = true;
@@ -167,6 +219,7 @@ public class ToolWindow : EditorWindow
 
                 break;
             case EditMode.Edit:
+                SceneView.lastActiveSceneView.in2DMode = true;
 
                 break;
             case EditMode.None:

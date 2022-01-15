@@ -19,6 +19,8 @@ public class CustomGridPaletteDrawer
             {
                 return null;
             }
+
+            Debug.Log(selectedIdx + "!!!");
             return TargetPalette.items[selectedIdx];
         }
     }
@@ -36,14 +38,9 @@ public class CustomGridPaletteDrawer
         {
             selectedIdx = 0;
         }
-        if (selectedIdx >= TargetPalette.items.Count-1)
-        {
-            selectedIdx = 0;
-        }
+        
         scrollPos = EditorHelper.DrawGridItems(scrollPos, 10, TargetPalette.items.Count, winSize.x, slotSize , (idx) =>
         {
-            Debug.Log(idx + "/" + TargetPalette.items.Count);
-
             bool selected = CustomGridPaletteItemDrawer.Draw(slotSize,selectedIdx == idx, TargetPalette.items[idx]);
             if (selected)
             {

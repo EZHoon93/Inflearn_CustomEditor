@@ -21,7 +21,3 @@ MonoBehaviour:
     name: b
     targetObject: {fileID: 389483933608122224, guid: 14b100945dac8994aafc004d2d1f0468,
       type: 3}
-  - id: 2
-    name: c
-    targetObject: {fileID: 534706811890635355, guid: 99137090b189feb4daf2f5a9796923a4,
-      type: 3}
