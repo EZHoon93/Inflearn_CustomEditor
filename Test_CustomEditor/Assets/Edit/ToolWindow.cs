@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 
 using UnityEditor;
 
@@ -51,14 +52,25 @@ public class ToolWindow : EditorWindow
         SceneView.duringSceneGui -= OnSceneGUI;
         SceneView.duringSceneGui += OnSceneGUI;
 
+        Undo.undoRedoPerformed += OnUndoRedoPerformed;
+    }
+
+    void OnUndoRedoPerformed()
+    {
+
     }
 
     private void OnDisable()
     {
         Clear();
         SceneView.duringSceneGui -= OnSceneGUI;
-    }
+        Undo.undoRedoPerformed -= OnUndoRedoPerformed;
 
+    }
+    private void Update()
+    {
+        SceneView.lastActiveSceneView.Repaint();
+    }
     void OnSceneGUI(SceneView obj)
     {
 
@@ -66,14 +78,15 @@ public class ToolWindow : EditorWindow
         {
             return;
         }
-        if(Event.current.button == 0 && Event.current.type == EventType.MouseDown)
+        var mousePos = Event.current.mousePosition;
+        var ray = HandleUtility.GUIPointToWorldRay(mousePos);
+        EditorHelper.RayCast(ray.origin, ray.origin + ray.direction * 300, out var hitPos);
+        var cellPos = targetGrid.GetCellPos(hitPos);
+
+
+        if (Event.current.button == 0 && Event.current.type == EventType.MouseDown)
         {
-            var mousePos = Event.current.mousePosition;
-            var ray = HandleUtility.GUIPointToWorldRay(mousePos);
-            EditorHelper.RayCast(ray.origin, ray.origin + ray.direction * 300, out var hitPos);
-
-
-            var cellPos = targetGrid.GetCellPos(hitPos);
+       
             //마우스가 그리드내에잇을때
             if (targetGrid.Contains(cellPos))
             {
@@ -87,6 +100,26 @@ public class ToolWindow : EditorWindow
                 }
             }
         }
+
+        Handles.BeginGUI();
+        {
+            GUI.Label(new Rect(mousePos.x, mousePos.y + 10, 100, 50), cellPos.ToString(), EditorStyles.boldLabel);
+            if (targetGrid.IsItemExist(cellPos))
+            {
+                var item = targetPaletee.GetItem(targetGrid.GetItem(cellPos).id);
+                var previewTex = AssetPreview.GetAssetPreview(item.targetObject);
+
+                var rtBox = new Rect(10, 10, previewTex.width + 10, previewTex.height + 10);
+                var reTex = new Rect(15, 15, previewTex.width, previewTex.height);
+
+                GUI.Box(rtBox, GUIContent.none, GUI.skin.window);
+                GUI.DrawTexture(reTex, previewTex);
+
+                var rtName = new Rect(rtBox.center.x - 10, rtBox.bottom - 25, 100, 10);
+                GUI.Label(rtName, item.name, EditorStyles.boldLabel);
+            }
+        }
+        Handles.EndGUI();
         //Debug.Log(FindObjectOfType<CustomGrid>().GetCellPos(hitPos  ));
     }
 
@@ -99,11 +132,14 @@ public class ToolWindow : EditorWindow
         }
         if (targetGrid.IsItemExist(cellPos))
         {
-            GameObject.DestroyImmediate(targetGrid.GetItem(cellPos).gameObject);
+            //DestroyImmediate(targetGrid.GetItem(cellPos).gameObject);
+            Undo.DestroyObjectImmediate(targetGrid.GetItem(cellPos).gameObject);
             targetGrid.RemoveItem(cellPos);
         }
 
         var target = targetGrid.AddItem(cellPos, selectedItem);
+
+        Undo.RegisterCompleteObjectUndo(target.gameObject, "Create MapObject!");
 
         Event.current.Use();        //이벤트있는것 소거..
     }
@@ -112,7 +148,8 @@ public class ToolWindow : EditorWindow
     {
         if (targetGrid.IsItemExist(cellPos))
         {
-            GameObject.DestroyImmediate(targetGrid.GetItem(cellPos).gameObject);
+            //DestroyImmediate(targetGrid.GetItem(cellPos).gameObject);
+            Undo.DestroyObjectImmediate(targetGrid.GetItem(cellPos).gameObject);
             targetGrid.RemoveItem(cellPos);
             Event.current.Use();
 
@@ -127,6 +164,18 @@ public class ToolWindow : EditorWindow
         }
         else if(currentMode == EditMode.Edit)
         {
+            if(Event.current.keyCode == KeyCode.Q  && Event.current.type == EventType.KeyDown)
+            {
+                this.selectedEditToolMode = EditToolMode.Paint;
+                Repaint();
+                Event.current.Use();
+            }
+            else if (Event.current.keyCode == KeyCode.W && Event.current.type == EventType.KeyDown)
+            {
+                this.selectedEditToolMode = EditToolMode.Erase;
+                Repaint();
+                Event.current.Use();
+            }
             DrawEditMode();
         }
     }
@@ -176,11 +225,11 @@ public class ToolWindow : EditorWindow
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("불러오기", EditorStyles.toolbarButton))
             {
-
+                Load();
             }
             if (GUILayout.Button("저장하기", EditorStyles.toolbarButton))
             {
-
+                Save();
             }
 
         }
@@ -244,5 +293,31 @@ public class ToolWindow : EditorWindow
         }
 
         targetGrid = null;
+    }
+
+    void Save()
+    {
+        var path = EditorUtility.SaveFilePanel("맵 데이터 저장", Application.dataPath, "MapData.bin", "bin");
+        if(string.IsNullOrEmpty(path) == false)
+        {
+            byte[] data = targetGrid.Serialize();
+
+            File.WriteAllBytes(path , data);
+
+            ShowNotification(new GUIContent("저장 성공") , 3.0f);
+        }
+    }
+
+    void Load()
+    {
+        var path = EditorUtility.OpenFilePanel("맵 데이터 불러오기" , Application.dataPath ,"bin");
+        if(string.IsNullOrEmpty(path) == false)
+        {
+            var data = File.ReadAllBytes(path);
+            if(data != null)
+            {
+                targetGrid.Impot(data, targetPaletee);
+            }
+        }
     }
 }

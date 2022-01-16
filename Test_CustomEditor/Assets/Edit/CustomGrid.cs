@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
+using UnityEditor;
 
 public class CustomGrid : MonoBehaviour
 {
@@ -17,6 +19,17 @@ public class CustomGrid : MonoBehaviour
         reposition = true;
     }
 
+    public void RetreiveAll()
+    {
+        var mapObjects = FindObjectsOfType<MapObject>();
+        if(mapObjects != null)
+        {
+            for(int i = 0;  i < mapObjects.Length; i++)
+            {
+                items.Add(mapObjects[i].cellPos, mapObjects[i]);
+            }
+        }
+    }
     public Vector2Int GetCellPos(Vector3 worldPos)
     {
         //내림처리
@@ -96,6 +109,56 @@ public class CustomGrid : MonoBehaviour
     public Vector3 GetWorldPos(Vector2Int cellPos)
     {
         return new Vector3(cellPos.x * config.CellSize.x + config.CellSize.x * 0.5f, cellPos.y * config.CellSize.y + config.CellSize.y * 0.5f, 0);
+    }
+
+    public byte[] Serialize()
+    {
+        byte[] bytes = null;
+
+        using(var ms = new MemoryStream())
+        {
+            using(var writer = new BinaryWriter(ms))
+            {
+                writer.Write(items.Count);
+                foreach(var item in items)
+                {
+                    writer.Write(item.Key.x);
+                    writer.Write(item.Key.y);
+                    writer.Write(item.Value.id);
+                }
+
+                bytes = ms.ToArray();
+            }
+        }
+        return bytes;
+    }
+
+    //원상복구, 디시리얼라이즈
+    public void Impot(byte[] buffer , CustomGridPalette targetPalette)
+    {
+        foreach(var item in items)
+        {
+            //Undo.DestroyObjectImmediate(item.Value.gameObject);
+            DestroyImmediate(item.Value.gameObject);
+        }
+
+        items.Clear();
+        using(var ms = new MemoryStream(buffer))
+        {
+            using (var reader = new BinaryReader(ms))
+            {
+                int count = reader.ReadInt32();
+                for(int i = 0; i <count; i++)
+                {
+                    var xPos = reader.ReadInt32();
+                    var yPos = reader.ReadInt32();
+                    var id = reader.ReadInt32();
+
+                    var pos = new Vector2Int(xPos, yPos);
+                    AddItem(pos, targetPalette.GetItem(id));
+                }
+            }
+        }
     }
 
 }
